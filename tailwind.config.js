@@ -6,13 +6,6 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    
-    extend: {
-      gridTemplateColumns: {
-        '16': 'repeat(16, minmax(0, 1fr))',
-        'sudoku': 'repeat(9, minmax(0, 0.5fr))',
-      }
-    },
   },
   plugins: [],
 }

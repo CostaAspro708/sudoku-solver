@@ -65,40 +65,46 @@ function min_actions(board) {
   }
   return { index, moves };
 }
+
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 var count = 0;
-function solve_min() {
+async function solve_min() {
+
   count ++;
   let { index, moves } = min_actions(board);    
   if (index == null) return true;          
   for (let m of moves) {
-      console.log(board)
-      
-        board[index] = m;
-               
-      if (solve_min()) return true;             
+          
+            board[index] = m;
+            await sleep(100);
+            document.getElementById(index).value = m;
+            if (await solve_min()) return true;
+                      
   }
   board[index] = 0;                         
-  return false;
+  return false; 
 }
-function solve(index) {
-  while (index < 81 && board2[index]) ++index; // skip non-empty cells
-  if (index == 81) return true;               // we filled'em all, success!
-  let moves = actions(board, index);
-  if(board2[index] != null){
-    board[index] = board2[index];              // try one choice
-      if (solve(index + 1))          // if we can solve for the next cell
-          return true;
-  }else{
-    for (let m of moves) {
-      board[index] = m;              // try one choice
-      if (solve(index + 1))          // if we can solve for the next cell
-          return true;  
-  }
+// function solve(index) {
+//   while (index < 81 && board2[index]) ++index; // skip non-empty cells
+//   if (index == 81) return true;               // we filled'em all, success!
+//   let moves = actions(board, index);
+//   if(board2[index] != null){
+//     board[index] = board2[index];              // try one choice
+//       if (solve(index + 1))          // if we can solve for the next cell
+//           return true;
+//   }else{
+//     for (let m of moves) {
+//       board[index] = m;              // try one choice
+//       if (solve(index + 1))          // if we can solve for the next cell
+//           return true;  
+//   }
   
-  }
-  board[index] = 0;  // no move worked; we failed, clear the cell
-  return false;      // and backtrack
-}
+//   }
+//   board[index] = 0;  // no move worked; we failed, clear the cell
+//   return false;      // and backtrack
+// }
 var board = [];
 
 var board2 = [
@@ -131,18 +137,12 @@ const updatearray = function(row, col, value){
   console.log(grid_val);
 }
 
-
-console.log(grid_val)
 function button_push(){
   board = grid_val;
   board2 = [...board];
-  console.log(solve(0));
-  console.log(board2[1])
+  var test = solve_min()
+  console.log(test);
 
-  for(var i = 0; i < board.length; i++){
-    document.getElementById(i).value = board[i];
-  }
-  console.log("test")
 }
   return (
     <div className="App">
@@ -150,9 +150,17 @@ function button_push(){
         <div class="flex h-screen justify-center items-center">
           <div class="w-[365px] h-[360px]">
             {grid}
-            <input class="bg-blue-700" type="button" value="Solve" onClick={() => button_push()}/> 
+            <button class="h-10 px-5 m-2 text-indigo-100 transition-colors duration-150 bg-indigo-700 rounded-lg focus:shadow-outline hover:bg-indigo-800" onClick={() => button_push()}>Solve</button>
+            <div class="w-1/2">
+  <label for="range" class="font-bold text-gray-600">Simple range</label>
+  <input type="range" name="range" class="w-full h-2 bg-blue-100" />
+
+</div>
+
           </div>
+          
         </div>
+        
       </header>
     </div>
   );
