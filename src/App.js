@@ -1,8 +1,6 @@
-
-import { act } from 'react-dom/test-utils';
 import './App.css';
 import React, { useState } from 'react';
-import { toBeEmpty } from '@testing-library/jest-dom/dist/matchers';
+import SpeedIcon from '@mui/icons-material/Speed';
 
 function App() {
 var size = 9;
@@ -27,15 +25,15 @@ function actions(board, index) {
 function conflict(board, index, value) {
   let { row, col } = index_to_row_col(index);
 
-  // if already present on the column, not acceptable
+  // check if already in col
   for (let r = 0; r < 9; ++r)
       if (board[row_col_to_index(r, col)] == value) return false;
 
-  // if already present on the row, not acceptable
+  // check if already in row
   for (let c = 0; c < 9; ++c)
       if (board[row_col_to_index(row, c)] == value) return false;
 
-  // if already present in the same 3x3 square, also not acceptable
+  // Check if in 3x3 grid
   let r1 = Math.floor(row / 3) * 3;
   let c1 = Math.floor(col / 3) * 3;
   for (let r = r1; r < r1 + 3; ++r) {
@@ -71,40 +69,22 @@ async function sleep(ms) {
 }
 var count = 0;
 async function solve_min() {
-
+  var test = speed;
   count ++;
   let { index, moves } = min_actions(board);    
   if (index == null) return true;          
   for (let m of moves) {
           
             board[index] = m;
-            await sleep(100);
+            console.log(test);
+            await sleep(test);
             document.getElementById(index).value = m;
-            if (await solve_min()) return true;
+            if (await solve_min(speed)) return true;
                       
   }
   board[index] = 0;                         
   return false; 
 }
-// function solve(index) {
-//   while (index < 81 && board2[index]) ++index; // skip non-empty cells
-//   if (index == 81) return true;               // we filled'em all, success!
-//   let moves = actions(board, index);
-//   if(board2[index] != null){
-//     board[index] = board2[index];              // try one choice
-//       if (solve(index + 1))          // if we can solve for the next cell
-//           return true;
-//   }else{
-//     for (let m of moves) {
-//       board[index] = m;              // try one choice
-//       if (solve(index + 1))          // if we can solve for the next cell
-//           return true;  
-//   }
-  
-//   }
-//   board[index] = 0;  // no move worked; we failed, clear the cell
-//   return false;      // and backtrack
-// }
 var board = [];
 
 var board2 = [
@@ -126,7 +106,7 @@ for(var row = 0; row < size; row++){
     
   }
 }
-
+const [speed, setSpeed] = useState(100);
 const updatearray = function(row, col, value){
   var temp = [];
   var index = parseInt(row) + (parseInt(col)*9);
@@ -137,29 +117,93 @@ const updatearray = function(row, col, value){
   console.log(grid_val);
 }
 
-function button_push(){
-  board = grid_val;
-  board2 = [...board];
-  var test = solve_min()
-  console.log(test);
+function check_board(board, index, value) {
+  let { row, col } = index_to_row_col(index);
 
+  // check if in col
+  for (let r = 0; r < 9; ++r)
+      if (r != row && board[row_col_to_index(r, col)] == value){
+        
+        return false;
+      } 
+
+  // check if in row
+  for (let c = 0; c < 9; ++c)
+      if (c != col && board[row_col_to_index(row, c)] == value){
+
+        return false;
+      }
+  // check if in 3x3 grid
+  let r1 = Math.floor(row / 3) * 3;
+  let c1 = Math.floor(col / 3) * 3;
+  for (let r = r1; r < r1 + 3; ++r) {
+      for (let c = c1; c < c1 + 3; ++c) {
+          if (r != row && c != col && board[row_col_to_index(r, c)] == value){
+            return false;
+          }
+      }
+  }
+
+  
+  return true;
 }
+
+function check_input(){
+  for(var i = 0; i < size*size; i++){
+    if(board2[i] != null && check_board(board2, i, board2[i])==false){
+      return false;
+    }
+  }
+  return true;
+}
+const [on, setOn] = useState(0);
+async function button_push(){
+
+  if(on == 0){
+    setOn(1);
+    board = grid_val;
+    board2 = [...board];
+    setSpeed(document.getElementById('tstep').value)
+    if(check_input()){
+      var sov = await solve_min()
+      setOn(0);
+    }
+  }else{
+
+  }
+ 
+}
+
+function clear(){
+  if(on == 0){
+    board = new Array(size*size);
+    board2 = new Array(size*size);
+    setGrid(Array(size*size));
+    for(var i = 0; i < size*size; i++){
+      document.getElementById(i).value = "";
+    }
+  }
+}
+
   return (
     <div className="App">
       <header className="App-header">
-        <div class="flex h-screen justify-center items-center">
+        <div class="text-center">
+        <h1 class="font-medium leading-tight text-5xl mt-10 mb-10 text-blue-600">Sudoku Solver JS</h1>
+        </div>
+        <div class="flex flex-col h-screen my-auto items-center">
           <div class="w-[365px] h-[360px]">
             {grid}
             <button class="h-10 px-5 m-2 text-indigo-100 transition-colors duration-150 bg-indigo-700 rounded-lg focus:shadow-outline hover:bg-indigo-800" onClick={() => button_push()}>Solve</button>
-            <div class="w-1/2">
-  <label for="range" class="font-bold text-gray-600">Simple range</label>
-  <input type="range" name="range" class="w-full h-2 bg-blue-100" />
-
-</div>
+            <button class="h-10 px-5 m-2 text-indigo-100 transition-colors duration-150 bg-indigo-700 rounded-lg focus:shadow-outline hover:bg-indigo-800" onClick={() => clear()}>Clear</button>
+  <label for="range" class="font-bold text-gray-600"></label>
+  <div class="inline-flex">
+  <label for="volume"><SpeedIcon/></label> <input id="tstep" onChange={() => {setSpeed(document.getElementById('tstep').value)}} type="range" name="range" class="w-full h-2 bg-blue-100 m-auto" min="1" max="250"/>
+  </div>
 
           </div>
-          
-        </div>
+      </div>
+
         
       </header>
     </div>
